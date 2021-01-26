@@ -1,0 +1,38 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+variables:
+  ARM_PASS: $(adminPass)
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '101-vm-simple-linux'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'DevOps POS HS'
+    subscriptionId: 'c6f53805-6dda-4ba5-b469-d053c85e0915'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'DevOps-POC-RG'
+    location: 'East US 2'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.json'
+    csmParametersFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.parameters.json'
+    overrideParameters: '-vmName $(vmName) -adminUsername $(adminUser) -adminPasswordOrKey $(ARM_PASS) -dnsLabelPrefix $(dnsLabel)'
+    deploymentMode: 'Incremental'
